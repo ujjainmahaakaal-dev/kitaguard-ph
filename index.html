@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f766e" />
+  <title>KitaGuard PH — Offline Kita & Utang Tracker</title>
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --accent: #d97706;
+      --danger: #dc2626;
+      --success: #15803d;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 40px;
+    }
+
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 2px 0 0;
+      font-size: 0.78rem;
+      opacity: 0.9;
+    }
+
+    .lang-btn {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .tab-btn {
+      padding: 12px 6px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--muted);
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .stat-box {
+      padding: 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .stat-box.profit {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      grid-column: span 2;
+    }
+
+    .stat-box.capital {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+
+    .stat-box.utang {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .stat-val {
+      font-size: 1.55rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .profit .stat-val { color: var(--success); font-size: 1.9rem; }
+    .capital .stat-val { color: var(--accent); font-size: 1.3rem; }
+    .utang .stat-val { color: var(--danger); font-size: 1.3rem; }
+
+    .alert-banner {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .alert-warn { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+    .alert-good { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
+    .alert-bad  { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+
+    label {
+      display: block;
+      font-weight: 700;
+      font-size: 0.92rem;
+      margin-bottom: 6px;
+      margin-top: 12px;
+    }
+
+    label:first-child { margin-top: 0; }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 400;
+      display: block;
+      margin-top: 2px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 13px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .quick-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .pill {
+      background: #e2e8f0;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:active { background: var(--primary-dark); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline {
+      background: #fff;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      margin-top: 10px;
+    }
+
+    .hidden { display: none; }
+
+    .list-item {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .list-item:last-child { border-bottom: none; }
+
+    .item-title { font-weight: 800; font-size: 1rem; }
+    .item-sub { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    .item-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .mini-btn {
+      padding: 8px 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .mini-paid { background: #dcfce7; color: #166534; }
+    .mini-remind { background: #dbeafe; color: #1e40af; }
+    .mini-del { background: #fee2e2; color: #991b1b; }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 30px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .toast.show { opacity: 1; }
+
+    footer {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 20px;
+      padding: 0 16px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>KitaGuard PH 🇵🇭</h1>
+    <p id="subtitle">Offline Kita &amp; Utang Tracker (Walang Data Needed)</p>
+  </div>
+  <button class="lang-btn" onclick="toggleLang()" id="langToggle">English</button>
+</header>
+
+<div class="container">
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('today')" id="tabToday">📊 Ngayon</button>
+    <button class="tab-btn" onclick="switchTab('utang')" id="tabUtang">📒 Utang (<span id="utangCount">0</span>)</button>
+    <button class="tab-btn" onclick="switchTab('history')" id="tabHistory">📅 History</button>
+  </div>
+
+  <!-- TAB 1: TODAY'S KITA CALCULATOR -->
+  <div id="view-today">
+    <div class="card">
+      <div class="summary-grid">
+        <div class="stat-box profit">
+          <div class="stat-label" id="lblNetProfit">Malinis na Take-Home Kita</div>
+          <div class="stat-val" id="dispNetProfit">₱0</div>
+        </div>
+        <div class="stat-box capital">
+          <div class="stat-label" id="lblSafeCapital">Itabi para Bukas (Puhunan/Gas)</div>
+          <div class="stat-val" id="dispSafeCapital">₱0</div>
+        </div>
+        <div class="stat-box utang">
+          <div class="stat-label" id="lblTotalUtang">Kabuuang Pautang</div>
+          <div class="stat-val" id="dispTotalUtang">₱0</div>
+        </div>
+      </div>
+      <div id="statusBanner" class="alert-banner alert-good">
+        Ilagay ang benta at puhunan sa baba para malaman ang tunay mong kita ngayon.
+      </div>
+    </div>
+
+    <div class="card">
+      <label id="lblGross">
+        1. Kabuuang Cash na Hawak (Gross Cash)
+        <span class="hint" id="hintGross">Lahat ng cash + GCash na pumasok ngayong araw</span>
+      </label>
+      <input type="number" id="inputGross" inputmode="decimal" placeholder="0" oninput="calculateLive()" />
+      <div class="quick-pills">
+        <button class="pill" onclick="addVal('inputGross', 500)">+₱500</button>
+        <button class="pill" onclick="addVal('inputGross', 1000)">+₱1,000</button>
+        <button class="pill" onclick="addVal('inputGross', 2000)">+₱2,000</button>
+        <button class="pill" onclick="setVal('inputGross', 0)">Clear</button>
+      </div>
+
+      <label id="lblCost">
+        2. Puhunan / Boundary / Gasolina
+        <span class="hint" id="hintCost">Hindi pwedeng gastusin — pambili ng paninda o pang-boundary bukas</span>
+      </label>
+      <input type="number" id="inputCost" inputmode="decimal" placeholder="0" oninput="calculateLive()" />
+      <div class="quick-pills">
+        <button class="pill" onclick="addVal('inputCost', 200)">+₱200</button>
+        <button class="pill" onclick="addVal('inputCost', 350)">+₱350</button>
+        <button class="pill" onclick="addVal('inputCost', 500)">+₱500</button>
+        <button class="pill" onclick="setVal('inputCost', 0)">Clear</button>
+      </div>
+
+      <label id="lblExpense">
+        3. Gastos sa Araw (Pagkain / Merienda / Load)
+        <span class="hint" id="hintExpense">Opsyonal: Iba pang nagastos mo habang namamasada o nagtitinda</span>
+      </label>
+      <input type="number" id="inputExpense" inputmode="decimal" placeholder="0" oninput="calculateLive()" />
+
+      <button class="btn btn-primary" onclick="saveDailyRecord()" id="btnSaveDay">
+        💾 I-save ang Kita Ngayong Araw
+      </button>
+      <button class="btn btn-outline" onclick="shareDailySummary()" id="btnShareSummary">
+        📲 I-copy / I-share ang Report sa WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB 2: UTANG LEDGER -->
+  <div id="view-utang" class="hidden">
+    <div class="card">
+      <label id="lblDebtorName">Pangalan ng Umutang (Suki / Pasahero)</label>
+      <input type="text" id="debtorName" placeholder="Hal. Aling Nena / Kuya Jun" />
+
+      <label id="lblDebtorAmount">Halaga ng Utang (₱)</label>
+      <input type="number" id="debtorAmount" inputmode="decimal" placeholder="0" />
+
+      <label id="lblDebtorNote">Anong Kinuha / Biyahe (Opsyonal)</label>
+      <input type="text" id="debtorNote" placeholder="Hal. 2 kilo bigas / Hatid sa bayan" />
+
+      <button class="btn btn-danger" onclick="addUtang()" id="btnAddUtang">
+        ➕ Ilista ang Bagong Utang
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="stat-label" id="lblUnpaidListTitle">Mga Hindi Pa Bayad</div>
+      <div id="utangList" style="margin-top: 8px;"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: HISTORY -->
+  <div id="view-history" class="hidden">
+    <div class="card">
+      <div class="summary-grid">
+        <div class="stat-box profit">
+          <div class="stat-label" id="lbl7DayProfit">Kabuuang Naipong Kita (Saved Logs)</div>
+          <div class="stat-val" id="dispTotalSavedProfit">₱0</div>
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="clearAllHistory()" id="btnClearHistory" style="border-color:#dc2626; color:#dc2626;">
+        🗑️ Burahin Lahat ng History
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="stat-label" id="lblHistoryTitle">Mga Nakaraang Araw</div>
+      <div id="historyList" style="margin-top: 8px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved!</div>
+
+<footer id="footerText">
+  100% Offline • Naka-save sa phone browser mo mismo. I-bookmark o i-Add to Home Screen para magamit kahit walang load.
+</footer>
+
+<script>
+  let lang = 'tl';
+  let utangData = JSON.parse(localStorage.getItem('kitaguard_utang') || '[]');
+  let historyData = JSON.parse(localStorage.getItem('kitaguard_history') || '[]');
+
+  const copy = {
+    tl: {
+      toggle: 'English',
+      subtitle: 'Offline Kita & Utang Tracker (Walang Data Needed)',
+      tabToday: '📊 Ngayon',
+      tabUtang: '📒 Utang',
+      tabHistory: '📅 History',
+      lblNetProfit: 'Malinis na Take-Home Kita',
+      lblSafeCapital: 'Itabi para Bukas (Puhunan/Gas)',
+      lblTotalUtang: 'Kabuuang Pautang',
+      lblGross: '1. Kabuuang Cash na Hawak (Gross Cash)',
+      hintGross: 'Lahat ng cash + GCash na pumasok ngayong araw',
+      lblCost: '2. Puhunan / Boundary / Gasolina',
+      hintCost: 'Hindi pwedeng gastusin — pambili ng paninda o pang-boundary bukas',
+      lblExpense: '3. Gastos sa Araw (Pagkain / Merienda / Load)',
+      hintExpense: 'Opsyonal: Iba pang nagastos mo habang namamasada o nagtitinda',
+      btnSaveDay: '💾 I-save ang Kita Ngayong Araw',
+      btnShareSummary: '📲 I-copy / I-share ang Report sa WhatsApp',
+      lblDebtorName: 'Pangalan ng Umutang (Suki / Pasahero)',
+      lblDebtorAmount: 'Halaga ng Utang (₱)',
+      lblDebtorNote: 'Anong Kinuha / Biyahe (Opsyonal)',
+      btnAddUtang: '➕ Ilista ang Bagong Utang',
+      lblUnpaidListTitle: 'Mga Hindi Pa Bayad',
+      lbl7DayProfit: 'Kabuuang Naipong Kita (Saved Logs)',
+      btnClearHistory: '🗑️ Burahin Lahat ng History',
+      lblHistoryTitle: 'Mga Nakaraang Araw',
+      footer: '100% Offline • Naka-save sa phone browser mo mismo. I-bookmark o i-Add to Home Screen para magamit kahit walang load.',
+      emptyUtang: 'Walang nakalistang utang ngayon. Good job!',
+      emptyHistory: 'Wala pang naka-save na kita.',
+      paidBtn: '✅ Bayad Na',
+      remindBtn: '📲 Singilin',
+      promptDefault: 'Ilagay ang benta at puhunan sa baba para malaman ang tunay mong kita ngayon.',
+      warnNegative: (loss, cap) => `⚠️ ABONADO KA NG ₱${loss}! Kulang ang cash mo para sa ₱${cap} na puhunan/boundary bukas.`,
+      warnTight: (net, cap) => `⚡ Sakto lang: ₱${net} ang kita mo. Siguraduhing nakatabi na ang ₱${cap} para bukas!`,
+      goodProfit: (net, cap) => `✅ Magandang kita! Pwede mong iuwi ang ₱${net}. Itabi ang ₱${cap} para sa puhunan/gas bukas.`
+    },
+    en: {
+      toggle: 'Taglish',
+      subtitle: 'Offline Profit & Credit Tracker (Works Without Data)',
+      tabToday: '📊 Today',
+      tabUtang: '📒 Credit',
+      tabHistory: '📅 History',
+      lblNetProfit: 'Clean Take-Home Profit',
+      lblSafeCapital: 'Set Aside for Tomorrow (Capital/Fuel)',
+      lblTotalUtang: 'Total Unpaid Customer Credit',
+      lblGross: '1. Total Cash Collected Today',
+      hintGross: 'All physical cash + e-wallet payments received today',
+      lblCost: '2. Capital / Boundary / Fuel Cost',
+      hintCost: 'Do NOT spend — strictly reserved for tomorrow’s stock or boundary',
+      lblExpense: '3. Daily Personal Expenses (Food / Load)',
+      hintExpense: 'Optional: Meals or load spent during your shift',
+      btnSaveDay: '💾 Save Today’s Profit Log',
+      btnShareSummary: '📲 Copy / Share Summary for WhatsApp',
+      lblDebtorName: 'Customer / Passenger Name',
+      lblDebtorAmount: 'Amount Owed (₱)',
+      lblDebtorNote: 'Items / Trip Details (Optional)',
+      btnAddUtang: '➕ Add Unpaid Credit',
+      lblUnpaidListTitle: 'Unpaid Balances',
+      lbl7DayProfit: 'Cumulative Saved Profit',
+      btnClearHistory: '🗑️ Clear All History',
+      lblHistoryTitle: 'Past Daily Logs',
+      footer: '100% Offline • Saved directly on your phone browser. Tap "Add to Home Screen" to use anytime without mobile data.',
+      emptyUtang: 'No unpaid customer credit listed right now!',
+      emptyHistory: 'No saved daily records yet.',
+      paidBtn: '✅ Mark Paid',
+      remindBtn: '📲 Remind',
+      promptDefault: 'Enter today’s cash collected and capital cost below to see your real take-home profit.',
+      warnNegative: (loss, cap) => `⚠️ SHORTFALL OF ₱${loss}! Your cash is not enough to cover tomorrow’s ₱${cap} capital/boundary.`,
+      warnTight: (net, cap) => `⚡ Tight margin: ₱${net} profit. Make sure ₱${cap} is strictly locked away for tomorrow!`,
+      goodProfit: (net, cap) => `✅ Solid day! You can safely take home ₱${net}. Keep ₱${cap} untouched for tomorrow.`
+    }
+  };
+
+  function formatPeso(num) {
+    return '₱' + Number(num || 0).toLocaleString('en-PH', { maximumFractionDigits: 0 });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function toggleLang() {
+    lang = lang === 'tl' ? 'en' : 'tl';
+    applyLanguage();
+    calculateLive();
+    renderUtang();
+    renderHistory();
+  }
+
+  function applyLanguage() {
+    const c = copy[lang];
+    document.getElementById('langToggle').textContent = c.toggle;
+    document.getElementById('subtitle').textContent = c.subtitle;
+    document.getElementById('tabToday').textContent = c.tabToday;
+    document.getElementById('tabUtang').innerHTML = `${c.tabUtang} (<span id="utangCount">${utangData.length}</span>)`;
+    document.getElementById('tabHistory').textContent = c.tabHistory;
+    document.getElementById('lblNetProfit').textContent = c.lblNetProfit;
+    document.getElementById('lblSafeCapital').textContent = c.lblSafeCapital;
+    document.getElementById('lblTotalUtang').textContent = c.lblTotalUtang;
+    document.getElementById('lblGross').innerHTML = `${c.lblGross}<span class="hint">${c.hintGross}</span>`;
+    document.getElementById('lblCost').innerHTML = `${c.lblCost}<span class="hint">${c.hintCost}</span>`;
+    document.getElementById('lblExpense').innerHTML = `${c.lblExpense}<span class="hint">${c.hintExpense}</span>`;
+    document.getElementById('btnSaveDay').textContent = c.btnSaveDay;
+    document.getElementById('btnShareSummary').textContent = c.btnShareSummary;
+    document.getElementById('lblDebtorName').textContent = c.lblDebtorName;
+    document.getElementById('lblDebtorAmount').textContent = c.lblDebtorAmount;
+    document.getElementById('lblDebtorNote').textContent = c.lblDebtorNote;
+    document.getElementById('btnAddUtang').textContent = c.btnAddUtang;
+    document.getElementById('lblUnpaidListTitle').textContent = c.lblUnpaidListTitle;
+    document.getElementById('lbl7DayProfit').textContent = c.lbl7DayProfit;
+    document.getElementById('btnClearHistory').textContent = c.btnClearHistory;
+    document.getElementById('lblHistoryTitle').textContent = c.lblHistoryTitle;
+    document.getElementById('footerText').textContent = c.footer;
+  }
+
+  function switchTab(tab) {
+    ['today', 'utang', 'history'].forEach(t => {
+      document.getElementById('view-' + t).classList.toggle('hidden', t !== tab);
+      document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+    });
+  }
+
+  function addVal(id, amt) {
+    const el = document.getElementById(id);
+    el.value = (Number(el.value) || 0) + amt;
+    calculateLive();
+  }
+
+  function setVal(id, amt) {
+    document.getElementById(id).value = amt === 0 ? '' : amt;
+    calculateLive();
+  }
+
+  function getTotalUtang() {
+    return utangData.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }
+
+  function calculateLive() {
+    const gross = Number(document.getElementById('inputGross').value) || 0;
+    const cost = Number(document.getElementById('inputCost').value) || 0;
+    const expense = Number(document.getElementById('inputExpense').value) || 0;
+    const net = gross - cost - expense;
+    const totalUtang = getTotalUtang();
+
+    document.getElementById('dispNetProfit').textContent = formatPeso(net);
+    document.getElementById('dispSafeCapital').textContent = formatPeso(cost);
+    document.getElementById('dispTotalUtang').textContent = formatPeso(totalUtang);
+
+    const banner = document.getElementById('statusBanner');
+    const c = copy[lang];
+
+    if (gross === 0 && cost === 0 && expense === 0) {
+      banner.className = 'alert-banner alert-good';
+      banner.textContent = c.promptDefault;
+    } else if (net < 0) {
+      banner.className = 'alert-banner alert-bad';
+      banner.textContent = c.warnNegative(Math.abs(net).toLocaleString('en-PH'), cost.toLocaleString('en-PH'));
+    } else if (net < 200) {
+      banner.className = 'alert-banner alert-warn';
+      banner.textContent = c.warnTight(net.toLocaleString('en-PH'), cost.toLocaleString('en-PH'));
+    } else {
+      banner.className = 'alert-banner alert-good';
+      banner.textContent = c.goodProfit(net.toLocaleString('en-PH'), cost.toLocaleString('en-PH'));
+    }
+  }
+
+  function saveDailyRecord() {
+    const gross = Number(document.getElementById('inputGross').value) || 0;
+    const cost = Number(document.getElementById('inputCost').value) || 0;
+    const expense = Number(document.getElementById('inputExpense').value) || 0;
+
+    if (gross === 0 && cost === 0) {
+      showToast(lang === 'tl' ? 'Maglagay muna ng halaga!' : 'Enter amounts first!');
+      return;
+    }
+
+    const net = gross - cost - expense;
+    const todayStr = new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    historyData.unshift({
+      id: Date.now(),
+      date: todayStr,
+      gross,
+      cost,
+      expense,
+      net
+    });
+
+    localStorage.setItem('kitaguard_history', JSON.stringify(historyData));
+    renderHistory();
+    showToast(lang === 'tl' ? '✅ Na-save na ang kita ngayong araw!' : '✅ Daily profit saved!');
+  }
+
+  function shareDailySummary() {
+    const gross = Number(document.getElementById('inputGross').value) || 0;
+    const cost = Number(document.getElementById('inputCost').value) || 0;
+    const expense = Number(document.getElementById('inputExpense').value) || 0;
+    const net = gross - cost - expense;
+    const totalUtang = getTotalUtang();
+    const todayStr = new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+
+    const text = `📊 KitaGuard PH Report (${todayStr})\n` +
+      `• Kabuuang Cash: ${formatPeso(gross)}\n` +
+      `• Itinabing Puhunan/Gas: ${formatPeso(cost)}\n` +
+      `• Gastos sa Araw: ${formatPeso(expense)}\n` +
+      `✅ Malinis na Kita: ${formatPeso(net)}\n` +
+      `📒 Nakalista pang Utang: ${formatPeso(totalUtang)}`;
+
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text);
+      showToast(lang === 'tl' ? '📋 Na-copy na! I-paste sa WhatsApp/Messenger.' : '📋 Copied! Paste in WhatsApp/Messenger.');
+    }
+  }
+
+  function addUtang() {
+    const name = document.getElementById('debtorName').value.trim();
+    const amount = Number(document.getElementById('debtorAmount').value) || 0;
+    const note = document.getElementById('debtorNote').value.trim();
+
+    if (!name || amount <= 0) {
+      showToast(lang === 'tl' ? 'Ilagay ang pangalan at halaga!' : 'Enter name and amount!');
+      return;
+    }
+
+    const todayStr = new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+    utangData.unshift({ id: Date.now(), name, amount, note, date: todayStr });
+    localStorage.setItem('kitaguard_utang', JSON.stringify(utangData));
+
+    document.getElementById('debtorName').value = '';
+    document.getElementById('debtorAmount').value = '';
+    document.getElementById('debtorNote').value = '';
+
+    renderUtang();
+    calculateLive();
+    showToast(lang === 'tl' ? '📒 Nailista na ang utang!' : '📒 Credit added!');
+  }
+
+  function markPaid(id) {
+    utangData = utangData.filter(item => item.id !== id);
+    localStorage.setItem('kitaguard_utang', JSON.stringify(utangData));
+    renderUtang();
+    calculateLive();
+    showToast(lang === 'tl' ? '✅ Markado nang bayad!' : '✅ Marked as paid!');
+  }
+
+  function sendReminder(name, amount, note, date) {
+    const msg = `Magandang araw po ${name}! Paalala lang po sa balance na ${formatPeso(amount)}${note ? ' (' + note + ')' : ''} noong ${date}. Salamat po sa patuloy na pagtangkilik! 🙏`;
+    if (navigator.share) {
+      navigator.share({ text: msg }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(msg);
+      showToast(lang === 'tl' ? '📋 Na-copy na ang paalala! I-paste sa chat.' : '📋 Reminder copied! Paste in chat.');
+    }
+  }
+
+  function renderUtang() {
+    const list = document.getElementById('utangList');
+    document.getElementById('utangCount').textContent = utangData.length;
+    const c = copy[lang];
+
+    if (utangData.length === 0) {
+      list.innerHTML = `<p style="color:var(--muted); font-size:0.9rem; margin:8px 0;">${c.emptyUtang}</p>`;
+      return;
+    }
+
+    list.innerHTML = utangData.map(item => `
+      <div class="list-item">
+        <div>
+          <div class="item-title">${item.name} — <span style="color:var(--danger);">${formatPeso(item.amount)}</span></div>
+          <div class="item-sub">${item.date}${item.note ? ' • ' + item.note : ''}</div>
+        </div>
+        <div class="item-actions">
+          <button class="mini-btn mini-remind" onclick="sendReminder('${item.name.replace(/'/g, "\\'")}', ${item.amount}, '${(item.note || '').replace(/'/g, "\\'")}', '${item.date}')">${c.remindBtn}</button>
+          <button class="mini-btn mini-paid" onclick="markPaid(${item.id})">${c.paidBtn}</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function deleteHistoryItem(id) {
+    historyData = historyData.filter(item => item.id !== id);
+    localStorage.setItem('kitaguard_history', JSON.stringify(historyData));
+    renderHistory();
+  }
+
+  function clearAllHistory() {
+    if (confirm(lang === 'tl' ? 'Sigurado ka bang buburahin lahat ng history?' : 'Clear all saved daily logs?')) {
+      historyData = [];
+      localStorage.setItem('kitaguard_history', JSON.stringify(historyData));
+      renderHistory();
+    }
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const c = copy[lang];
+    const totalNet = historyData.reduce((sum, item) => sum + Number(item.net || 0), 0);
+    document.getElementById('dispTotalSavedProfit').textContent = formatPeso(totalNet);
+
+    if (historyData.length === 0) {
+      list.innerHTML = `<p style="color:var(--muted); font-size:0.9rem; margin:8px 0;">${c.emptyHistory}</p>`;
+      return;
+    }
+
+    list.innerHTML = historyData.map(item => `
+      <div class="list-item">
+        <div>
+          <div class="item-title">${item.date} • <span style="color:${item.net >= 0 ? 'var(--success)' : 'var(--danger)'};">${formatPeso(item.net)}</span></div>
+          <div class="item-sub">Cash: ${formatPeso(item.gross)} | Puhunan: ${formatPeso(item.cost)} | Gastos: ${formatPeso(item.expense)}</div>
+        </div>
+        <button class="mini-btn mini-del" onclick="deleteHistoryItem(${item.id})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  // Initialize on load
+  applyLanguage();
+  calculateLive();
+  renderUtang();
+  renderHistory();
+</script>
+
+</body>
+</html>
